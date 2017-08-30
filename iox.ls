@@ -8,45 +8,63 @@ rl = readline.createInterface do
 isDigit = (n)->
     return n >= '0' && n <= '9'
 
-put = (needle,haystack,ins)->
-    
-
 class State
-    chunk: ''
+    line: ''
     ins: 0
     depth: 0
-    code: ''
+    chunk: ''
     wrap: false
     chain: ''
-    putraw: (tk)->
+    pending: []
+    put: (tk,chain)->
         #if @wrap
-        #    @chunk = tk + '(' + @chunk + ')'
+        #    @line = tk + '(' + @line + ')'
         #    @wrap = false
         #else
-        @chunk = @chunk.substr(0,@ins) + tk + @chunk.substr(@ins)
+        if @chain
+            @line = @line.substr(0,@ins) + @chain + @line.substr(@ins)
+            @ins += @chain.length
+            @chain = ''
+        @line = @line.substr(0,@ins) + tk + @line.substr(@ins)
         @ins += tk.length
+        @chain = chain
         @depth++
-    put: (tk)->
+    putfunc: (tk)->
         if @wrap
-            @chunk = tk + '(' + @chunk + ')'
+            @line = tk + '(' + @line + ')'
             @wrap = false
         else
             if @chain
-                @chunk = @chunk.substr(0,@ins) + @chain + @chunk.substr(@ins)
+                @line = @line.substr(0,@ins) + @chain + @line.substr(@ins)
                 @ins += @chain.length
                 @chain = ''
-            @chunk = @chunk.substr(0,@ins) + tk + "()" + @chunk.substr(@ins)
+            @line = @line.substr(0,@ins) + tk + "()" + @line.substr(@ins)
         @ins += tk.length + 1
         @depth++
-    push: ->
-        if @chunk
-            console.log @chunk+';'
-            @code += @chunk + ';\n';
-            @chunk = ''
+    pend: ->
+        if @line
+            @pending.unshift(@line + ';')
+            @line = ''
         @ins = 0
         @depth = 0
+        @chain = ''
+        @wrap = false
+    push: ->
+        if @line
+            console.log @line+';'
+            @chunk += @line + ';\n'
+            @line = ''
+        if @pending
+            for line in @pending
+                console.log line
+            #console.log @pending.join('\n')
+            @chunk += @pending.join('\n')
+            @pending = []
+        @ins = 0
+        @depth = 0
+        @chain = ''
+        @wrap = false
 
-code = ''
 iter = (cb)->
     line <- rl.question 'iox> '
     tokens = line.split(' ')
@@ -58,43 +76,59 @@ iter = (cb)->
     state = new State()
 
     i = rtokens.length-1
-    for tk in rtokens
+    for i from 0 to rtokens.length-1
+        tk = rtokens[i]
 
+        left = void
         try
-            left = rtokens[i-1]
+            left = rtokens[i+1]
             if left[left.length-1]==','
                 # combine
                 void
 
-        console.log state.chunk
         tk0 = tk[0]
+        tke = tk[tk.length-1]
         if tk0 == '$'
-            if state.depth
-                state.putraw(tk.substr(1))
-                state.chain = ' = '
-            else
-                state.putraw(tk.substr(1))
+            #if state.depth
+            state.put(tk.substr(1), ' = ')
+            #else
+            #    state.put(tk.substr(1))
         else if isDigit(tk0)
             state.put(tk)
+            state.pend()
+        else if tk0 == '\\'
+            state.put("'" + tk.substr(1) + "'")
+        else if tke == '"'
+            void
+            #t = tk
+            #s = ''
+            #until t[0]=='"'
+            #    s += t
+            #    i += 1
+            #    t = rtokens[i]
+            #state.put(tk)
         else if tk0 == '['
             # parse array/range
-            state.put(tk)
+            void
         else if tk0 == '('
             # parse range
             void
         else if tk0 == '{'
             # parse dict
-            state.put(tk)
+            void
         else if tk0 == '-'
             # flag
             void
         else if tk0 == '+'
             # flag
             void
-        else # function?
-            state.put(tk)
-
-        i--
+        else if tk0 == ';'
+            state.pend()
+        else # function
+            if tk=='out'
+                state.putfunc('console.log')
+            else
+                state.putfunc(tk)
 
     state.push()
     return cb!
