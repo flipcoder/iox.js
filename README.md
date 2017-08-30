@@ -108,6 +108,80 @@ parameters first, separated by commas, then we call the function.
 
 This takes the 3 numbers, calls "+", which adds them all, then pipes that to out, which prints them.
 
+### Looping
+
+for each example
+
+```
+[1,2,3] each
+    out
+```
+
+for loop example
+
+```
+[1..5) each
+    out
+```
+
+turns into:
+
+```
+for(var i = 1; i < 5; ++i)
+{
+    out(i);
+}
+```
+
+also async:
+
+```
+[1,2,3] async.each
+    out
+```
+
+turns into:
+
+```
+async.each([1,2,3],function(i,cb){
+    out(i);
+    return cb();
+});
+```
+
+callbacks trigger at end of scope unless you take control of the callback object using @
+
+```
+[1,2,3] *each
+    'blah' @another_function
+```
+Using '@' either prefixed or before a function call adds the current callback to the params
+
+in this case:
+
+```
+async.each([1,2,3],function(i,cb){
+    another_function('blah',cb);
+});
+
+```
+
+### Backcalls
+
+```
+test
+    blah
+```
+    
+This is equivalent to test(function(){ return blah(); })
+
+```
+test ^
+blah
+```
+
+This is also equivalent to test(function(){ return blah(); })
+
 ### Packing/Unpacking
 
 iox is based around temporary variables being passed down "the stream".  Generally these are single values or a list of values.
@@ -149,7 +223,7 @@ Functions in iox take any number of inputs and give any number of outputs.
 Here is a basic function declaration:
 
 ```
-message:
+def message
     "Hello there, ", _
 
 # Usage:
@@ -206,22 +280,6 @@ alarm out # wake-up on event (availability of future 'alarm')
 
 a keypress
 	'a pressed!' out
-
-### Callbacks/Backcalls
-
-```
-test
-    blah
-```
-    
-This is equivalent to test(function(){ return blah(); })
-
-```
-test ^
-blah
-```
-
-This is also equivalent to test(function(){ return blah(); })
 
 ### What now?
 
