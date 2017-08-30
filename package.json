@@ -1,0 +1,11 @@
+{
+    "name": "iox",
+    "version": "0.1.0",
+    "private": true,
+    "description": "",
+    "main": "run.js",
+    "author": "Grady O'Connell",
+    "dependencies": {
+        "livescript": "^1.5.0"
+    }
+}
