@@ -152,7 +152,7 @@ async.each([1,2,3],function(i,cb){
 callbacks trigger at end of scope unless you take control of the callback object using @
 
 ```
-[1,2,3] *each
+[1,2,3] async.each
     'blah' @another_function
 ```
 Using '@' either prefixed or before a function call adds the current callback to the params
