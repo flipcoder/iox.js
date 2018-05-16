@@ -1,5 +1,5 @@
 # iox.js
-Flow-based language that compiles into js
+EXPERIMENTAL Flow-based language that compiles into js
 Copyright (c) 2017 Grady O'Connell
 (Ported to js from http://github.com/flipcoder/iox)
 
